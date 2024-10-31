@@ -1,26 +1,40 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { sequelize } from './src/models/index.js'; // Cập nhật đường dẫn import nếu cần
+import { sequelize } from './src/models/index.js';
 import router from './src/routes/index.js';
+import cors from 'cors'; // Import cors
 
 const app = express();
 
-// Sử dụng body-parser để parse JSON và urlencoded
+// Sử dụng CORS để cho phép yêu cầu từ các miền khác
+app.use(cors({
+    origin: '*', // Cho phép tất cả các miền. Có thể chỉ định miền cụ thể như 'http://example.com'
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các phương thức cho phép
+    allowedHeaders: ['Content-Type', 'Authorization'], // Các headers cho phép
+}));
+
+// Sử dụng body-parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Kết nối cơ sở dữ liệu và đồng bộ
-sequelize.sync({ force: true })
+sequelize.authenticate()
     .then(() => {
-        console.log('Database synced');
+        console.log('Database connected...');
+        return sequelize.sync({ alter: true });
+    })
+    .then(() => {
+        console.log('Database synchronized');
     })
     .catch((err) => {
-        console.error('Unable to sync the database:', err);
+        console.error('Database connection failed:', err);
     });
 
-app.use(router);
+// Sử dụng router
+app.use('/api', router);
 
 // Khởi động server
-app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });

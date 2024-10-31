@@ -1,17 +1,37 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js'; // Đảm bảo thêm .js nếu bạn sử dụng ES6
+import sequelize from '../config/db.config.js';
 
 const BorrowingDetails = sequelize.define('BorrowingDetails', {
+    borrow_detail_id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
+    borrow_id: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'borrowings',
+            key: 'borrow_id',
+        },
+        onDelete: 'CASCADE',
+    },
+    book_id: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'books',
+            key: 'book_id',
+        },
+        onDelete: 'CASCADE',
+    },
+    return_date: {
+        type: DataTypes.DATEONLY,
+    },
     notes: {
         type: DataTypes.TEXT,
     },
-    returned: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-    },
-    return_date: {
-        type: DataTypes.DATE,
-    }
+}, {
+    tableName: 'borrowing_details',
+    timestamps: false,
 });
 
-export default BorrowingDetails; // Xuất BorrowingDetails như một mặc định
+export default BorrowingDetails;

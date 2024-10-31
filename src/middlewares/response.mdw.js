@@ -4,8 +4,8 @@ export default function(req, res, next) {
             code,
             message,
             data,
-            option
-        })
-    }
+            option,
+        });
+    };
     next();
-};
+}

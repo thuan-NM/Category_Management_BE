@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js'; // Đảm bảo thêm .js nếu bạn sử dụng ES6
+import sequelize from '../config/db.config.js';
 
 const LibraryCard = sequelize.define('LibraryCard', {
     card_number: {
@@ -7,14 +7,18 @@ const LibraryCard = sequelize.define('LibraryCard', {
         primaryKey: true,
     },
     start_date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
+        allowNull: false,
     },
     expiry_date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
     },
     notes: {
         type: DataTypes.TEXT,
-    }
+    },
+}, {
+    tableName: 'library_cards',
+    timestamps: false,
 });
 
-export default LibraryCard; // Xuất LibraryCard như một mặc định
+export default LibraryCard;

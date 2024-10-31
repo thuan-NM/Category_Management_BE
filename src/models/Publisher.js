@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js'; // Đảm bảo thêm .js nếu bạn sử dụng ES6
+import sequelize from '../config/db.config.js';
 
 const Publisher = sequelize.define('Publisher', {
     publisher_id: {
@@ -19,7 +19,10 @@ const Publisher = sequelize.define('Publisher', {
     },
     representative_info: {
         type: DataTypes.TEXT,
-    }
+    },
+}, {
+    tableName: 'publishers',
+    timestamps: false,
 });
 
-export default Publisher; // Xuất Publisher như một mặc định
+export default Publisher;

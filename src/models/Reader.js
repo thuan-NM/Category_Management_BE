@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js'; // Đảm bảo thêm .js nếu bạn sử dụng ES6
+import sequelize from '../config/db.config.js';
 
 const Reader = sequelize.define('Reader', {
     reader_id: {
@@ -16,8 +16,14 @@ const Reader = sequelize.define('Reader', {
     },
     card_number: {
         type: DataTypes.STRING,
-        unique: true,
-    }
+        references: {
+            model: 'library_cards',
+            key: 'card_number',
+        },
+    },
+}, {
+    tableName: 'readers',
+    timestamps: false,
 });
 
-export default Reader; // Xuất Reader như một mặc định
+export default Reader;

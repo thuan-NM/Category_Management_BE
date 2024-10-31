@@ -1,3 +1,7 @@
 export default function(err, req, res, next) {
-    return res.fly({ status: err.status || 500, message: err.message, code: err.code });
+    console.error(err);
+    res.status(err.status || 500).json({
+        code: err.code || 'internal_server_error',
+        message: err.message || 'Internal Server Error',
+    });
 }

@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js'; // Đảm bảo thêm .js nếu bạn sử dụng ES6
+import sequelize from '../config/db.config.js';
 
 const Genre = sequelize.define('Genre', {
     genre_id: {
@@ -10,7 +10,10 @@ const Genre = sequelize.define('Genre', {
     genre_name: {
         type: DataTypes.STRING,
         allowNull: false,
-    }
+    },
+}, {
+    tableName: 'genres',
+    timestamps: false,
 });
 
-export default Genre; // Xuất Genre như một mặc định
+export default Genre;

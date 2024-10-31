@@ -1,6 +1,5 @@
-function controller(fn) {
+export default function controller(fn) {
     return (req, res, next) => {
-        fn(req, res, next).catch(next);
+        Promise.resolve(fn(req, res, next)).catch(next);
     };
 }
-export default controller;

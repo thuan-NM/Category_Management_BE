@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js'; // Đảm bảo thêm .js nếu bạn sử dụng ES6
+import sequelize from '../config/db.config.js';
 
 const Author = sequelize.define('Author', {
     author_id: {
@@ -16,7 +16,10 @@ const Author = sequelize.define('Author', {
     },
     notes: {
         type: DataTypes.TEXT,
-    }
+    },
+}, {
+    tableName: 'authors',
+    timestamps: false,
 });
 
-export default Author; // Xuất Author như một mặc định
+export default Author;

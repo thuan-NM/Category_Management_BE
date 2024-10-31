@@ -3,8 +3,8 @@ import sequelize from '../config/db.config.js';
 
 const Employee = sequelize.define('Employee', {
     employee_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
     },
     full_name: {
@@ -12,24 +12,26 @@ const Employee = sequelize.define('Employee', {
         allowNull: false,
     },
     birth_date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
     },
     phone_number: {
         type: DataTypes.STRING,
     },
     parent_number: {
         type: DataTypes.STRING,
-        defaultValue: "",
     },
     username: {
         type: DataTypes.STRING,
+        unique: true,
         allowNull: false,
-        unique: true, // Đảm bảo username là duy nhất
     },
     password: {
         type: DataTypes.STRING,
         allowNull: false,
-    }
+    },
+}, {
+    tableName: 'employees',
+    timestamps: false,
 });
 
 export default Employee;
