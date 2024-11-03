@@ -3,8 +3,8 @@ import sequelize from '../config/db.config.js';
 
 const Author = sequelize.define('Author', {
     author_id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
     author_name: {

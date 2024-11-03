@@ -3,8 +3,8 @@ import sequelize from '../config/db.config.js';
 
 const Publisher = sequelize.define('Publisher', {
     publisher_id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
     publisher_name: {

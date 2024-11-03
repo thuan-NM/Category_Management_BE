@@ -3,12 +3,12 @@ import sequelize from '../config/db.config.js';
 
 const BorrowingDetails = sequelize.define('BorrowingDetails', {
     borrow_detail_id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
     borrow_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
             model: 'borrowings',
             key: 'borrow_id',
@@ -16,7 +16,7 @@ const BorrowingDetails = sequelize.define('BorrowingDetails', {
         onDelete: 'CASCADE',
     },
     book_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
             model: 'books',
             key: 'book_id',

@@ -9,15 +9,25 @@ import {
 } from '../services/libraryCardService.js';
 
 // Thêm mới LibraryCard
-const createLibraryCard = async(req, res) => {
-    const card = await createLibraryCardService(req.body);
-    res.fly({
-        status: 201,
-        data: card,
-        code: 'librarycard_s_01',
-        message: 'Create new library card successfully'
-    });
+const createLibraryCard = async(req, res, next) => {
+    try {
+        // Chỉ lấy những dữ liệu khác ngoài card_number từ request body
+        const { card_number, ...cardData } = req.body;
+
+        // Gọi tới service để tạo LibraryCard, không có card_number
+        const card = await createLibraryCardService(cardData);
+        res.fly({
+            status: 201,
+            data: card,
+            code: 'librarycard_s_01',
+            message: 'Create new library card successfully'
+        });
+    } catch (error) {
+        next(error); // Đưa lỗi tới middleware xử lý lỗi
+    }
 };
+
+
 
 // Lấy tất cả LibraryCards
 const getAllLibraryCards = async(req, res) => {

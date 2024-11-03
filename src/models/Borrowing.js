@@ -3,8 +3,8 @@ import sequelize from '../config/db.config.js';
 
 const Borrowing = sequelize.define('Borrowing', {
     borrow_id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
     card_number: {
@@ -15,7 +15,7 @@ const Borrowing = sequelize.define('Borrowing', {
         },
     },
     employee_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID, // Updated to UUID to match Employee model
         references: {
             model: 'employees',
             key: 'employee_id',
