@@ -6,6 +6,7 @@ import createHttpError from 'http-errors';
 const createLibraryCard = async(cardData) => {
     const transaction = await sequelize.transaction();
     try {
+        // Tạo LibraryCard với card_number được sinh ra tự động
         const card = await LibraryCard.create(cardData, { transaction });
         await transaction.commit();
         return card;
@@ -14,6 +15,7 @@ const createLibraryCard = async(cardData) => {
         throw error;
     }
 };
+
 
 // Lấy tất cả LibraryCard với tìm kiếm và sắp xếp
 const getAllLibraryCards = async(query) => {

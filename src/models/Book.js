@@ -3,8 +3,8 @@ import sequelize from '../config/db.config.js';
 
 const Book = sequelize.define('Book', {
     book_id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
     title: {
@@ -15,7 +15,7 @@ const Book = sequelize.define('Book', {
         type: DataTypes.INTEGER,
     },
     author_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID, // Updated to match UUID type from Author
         allowNull: true,
         references: {
             model: 'authors',
@@ -23,7 +23,7 @@ const Book = sequelize.define('Book', {
         },
     },
     genre_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID, // Updated to UUID type for consistency
         allowNull: true,
         references: {
             model: 'genres',
@@ -31,7 +31,7 @@ const Book = sequelize.define('Book', {
         },
     },
     publisher_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID, // Updated to UUID type for consistency
         allowNull: true,
         references: {
             model: 'publishers',
@@ -41,7 +41,7 @@ const Book = sequelize.define('Book', {
     quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0, // Số lượng mặc định là 0
+        defaultValue: 0,
     },
 }, {
     tableName: 'books',
