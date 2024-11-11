@@ -7,8 +7,10 @@ import {
     deleteBook,
 } from '../controllers/bookController.js';
 import { controller } from '../middlewares/index.js';
+import auth from '../middlewares/auth.js';
 
 const router = express.Router();
+router.use(auth); // Apply auth middleware to all routes below this line
 
 router.post('/', controller(createBook));
 router.get('/', controller(getAllBooks));

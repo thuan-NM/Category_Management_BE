@@ -1,9 +1,11 @@
+import jwt from 'jsonwebtoken';
 import { Employee } from '../models/index.js';
 import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
 import sequelize from '../config/db.config.js';
 
-// Thêm mới Employee với Transaction
+const JWT_SECRET = process.env.JWT_SECRET
+    // Thêm mới Employee với Transaction
 const createEmployee = async(employeeData) => {
     const { password } = employeeData;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -110,12 +112,29 @@ const loginEmployee = async(username, password) => {
     if (!employee) {
         throw createHttpError(404, 'Employee not found');
     }
+
     const isMatch = await bcrypt.compare(password, employee.password);
     if (!isMatch) {
         throw createHttpError(401, 'Invalid credentials');
     }
-    // Tạo JWT hoặc token khác nếu cần
-    return employee;
+    // Generate a JWT token
+    const token = jwt.sign({
+            id: employee.id,
+            user: employee,
+        },
+        JWT_SECRET, { expiresIn: '10h' } // Token expires in 1 hour
+    );
+
+    return {
+        user: {
+            full_name: employee.full_name,
+            phone_number: employee.phone_number,
+            email: employee.email,
+            role: employee.role,
+            dob: employee.birth_date,
+        },
+        token,
+    };
 };
 
 // Function: Đếm số lượng nhân viên
