@@ -1,117 +1,87 @@
-import { LibraryCard, Reader } from '../models/index.js';
-import sequelize from '../config/db.config.js';
-import createHttpError from 'http-errors';
+import {
+    createLibraryCard as createLibraryCardService,
+    getAllLibraryCards as getAllLibraryCardsService,
+    getLibraryCardByNumber as getLibraryCardByNumberService,
+    updateLibraryCard as updateLibraryCardService,
+    deleteLibraryCard as deleteLibraryCardService,
+    createLibraryCardWithExpiry as createLibraryCardWithExpiryService
+} from '../services/libraryCardService.js';
 
-// Thêm mới LibraryCard với Transaction
-const createLibraryCard = async(cardData) => {
-    const transaction = await sequelize.transaction();
+// Thêm mới LibraryCard
+const createLibraryCard = async(req, res, next) => {
     try {
-        // Tạo LibraryCard với card_number được sinh ra tự động
-        const card = await LibraryCard.create(cardData, { transaction });
-        await transaction.commit();
-        return card;
+        const { card_number, ...cardData } = req.body;
+        const card = await createLibraryCardService(cardData);
+        res.status(201).json({
+            message: 'Create new library card successfully',
+            data: card
+        });
     } catch (error) {
-        await transaction.rollback();
-        throw error;
+        next(error);
     }
 };
 
-
-// Lấy tất cả LibraryCard với tìm kiếm và sắp xếp
-const getAllLibraryCards = async(query) => {
-    const { search, sortBy, order, page, limit } = query;
-    const where = {};
-    if (search) {
-        where.card_number = {
-            [sequelize.Op.like]: `%${search}%`
-        };
-    }
-
-    const offset = page && limit ? (page - 1) * limit : 0;
-    const cards = await LibraryCard.findAndCountAll({
-        where,
-        order: sortBy ? [
-            [sortBy, order === 'desc' ? 'DESC' : 'ASC']
-        ] : [
-            ['start_date', 'DESC']
-        ],
-        include: [Reader],
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset || undefined,
-    });
-    return cards;
-};
-
-// Lấy LibraryCard theo card_number
-const getLibraryCardByNumber = async(card_number) => {
-    const card = await LibraryCard.findByPk(card_number, { include: [Reader] });
-    if (!card) {
-        throw createHttpError(404, 'Library Card not found');
-    }
-    return card;
-};
-
-// Cập nhật LibraryCard với Transaction
-const updateLibraryCard = async(card_number, updateData) => {
-    const transaction = await sequelize.transaction();
+// Lấy tất cả LibraryCards
+const getAllLibraryCards = async(req, res, next) => {
     try {
-        const card = await getLibraryCardByNumber(card_number);
-        Object.assign(card, updateData);
-        await card.save({ transaction });
-        await transaction.commit();
-        return card;
+        const cards = await getAllLibraryCardsService(req.query);
+        res.status(200).json({
+            message: 'Get all library cards successfully',
+            data: cards
+        });
     } catch (error) {
-        await transaction.rollback();
-        throw error;
+        next(error);
     }
 };
 
-// Xóa LibraryCard với Trigger để xử lý dữ liệu liên quan
-const deleteLibraryCard = async(card_number) => {
-    const transaction = await sequelize.transaction();
+// Lấy LibraryCard theo số thẻ
+const getLibraryCardByNumber = async(req, res, next) => {
     try {
-        const card = await getLibraryCardByNumber(card_number);
-        await card.destroy({ transaction });
-        await transaction.commit();
+        const card = await getLibraryCardByNumberService(req.params.card_number);
+        res.status(200).json({
+            message: 'Get library card successfully',
+            data: card
+        });
     } catch (error) {
-        await transaction.rollback();
-        throw error;
+        next(error);
     }
 };
 
-// Thống kê số lượng độc giả theo thẻ thư viện
-const getReadersCountByLibraryCard = async() => {
-    const result = await LibraryCard.findAll({
-        attributes: [
-            'card_number', [sequelize.fn('COUNT', sequelize.col('Readers.reader_id')), 'readers_count'],
-        ],
-        include: [{
-            model: Reader,
-            attributes: [],
-        }],
-        group: ['LibraryCard.card_number'],
-    });
-    return result;
+// Cập nhật LibraryCard
+const updateLibraryCard = async(req, res, next) => {
+    try {
+        const card = await updateLibraryCardService(req.params.card_number, req.body);
+        res.status(200).json({
+            message: 'Update library card successfully',
+            data: card
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
-// Stored Procedure: Tạo thẻ thư viện tự động dựa trên ngày bắt đầu và thời hạn
-const createLibraryCardWithExpiry = async(cardData, expiryDays) => {
-    const transaction = await sequelize.transaction();
+// Xóa LibraryCard
+const deleteLibraryCard = async(req, res, next) => {
     try {
-        const startDate = cardData.start_date;
-        const expiry_date = new Date(startDate);
-        expiry_date.setDate(expiry_date.getDate() + expiryDays);
-
-        const card = await LibraryCard.create({
-            ...cardData,
-            expiry_date,
-        }, { transaction });
-
-        await transaction.commit();
-        return card;
+        await deleteLibraryCardService(req.params.card_number);
+        res.status(204).json({
+            message: 'Delete library card successfully'
+        });
     } catch (error) {
-        await transaction.rollback();
-        throw error;
+        next(error);
+    }
+};
+
+// Tạo thẻ thư viện với ngày hết hạn tự động
+const createLibraryCardWithExpiry = async(req, res, next) => {
+    try {
+        const card = await createLibraryCardWithExpiryService(req.body, req.body.expiryDays);
+        res.status(201).json({
+            message: 'Create new library card with expiry date successfully',
+            data: card
+        });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -121,6 +91,5 @@ export {
     getLibraryCardByNumber,
     updateLibraryCard,
     deleteLibraryCard,
-    getReadersCountByLibraryCard,
-    createLibraryCardWithExpiry,
+    createLibraryCardWithExpiry
 };

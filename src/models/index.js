@@ -3,7 +3,6 @@ import Author from './Author.js';
 import Book from './Book.js';
 import Genre from './Genre.js';
 import Publisher from './Publisher.js';
-import Reader from './Reader.js';
 import LibraryCard from './LibraryCard.js';
 import Employee from './Employee.js';
 import Borrowing from './Borrowing.js';
@@ -20,10 +19,6 @@ Book.belongsTo(Genre, { foreignKey: 'genre_id', onDelete: 'SET NULL' });
 
 Publisher.hasMany(Book, { foreignKey: 'publisher_id', onDelete: 'SET NULL' });
 Book.belongsTo(Publisher, { foreignKey: 'publisher_id', onDelete: 'SET NULL' });
-
-// 2. Quan hệ giữa Reader và LibraryCard
-LibraryCard.hasMany(Reader, { foreignKey: 'card_number', onDelete: 'CASCADE' });
-Reader.belongsTo(LibraryCard, { foreignKey: 'card_number', onDelete: 'CASCADE' });
 
 // 3. Quan hệ giữa Borrowing và LibraryCard, Employee
 LibraryCard.hasMany(Borrowing, { foreignKey: 'card_number', onDelete: 'CASCADE' });
@@ -45,7 +40,6 @@ export {
     Book,
     Genre,
     Publisher,
-    Reader,
     LibraryCard,
     Employee,
     Borrowing,

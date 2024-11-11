@@ -4,7 +4,6 @@ import employeeRoutes from './employeesRoutes.js';
 import genreRoutes from './genreRoutes.js';
 import libraryCardRoutes from './libraryCardRoutes.js';
 import publisherRoutes from './publisherRoutes.js';
-import readerRoutes from './readerRoutes.js';
 import borrowingDetailsRoutes from './borrowingDetailsRoutes.js';
 import authorRoutes from './authorRoutes.js';
 import bookRoutes from './bookRoutes.js';
@@ -22,7 +21,6 @@ router.use('/employees', employeeRoutes);
 router.use('/genres', genreRoutes);
 router.use('/librarycards', libraryCardRoutes);
 router.use('/publishers', publisherRoutes);
-router.use('/readers', readerRoutes);
 router.use('/borrowingdetails', borrowingDetailsRoutes);
 router.use('/authors', authorRoutes); // Định tuyến cho tác giả (authors)
 router.use('/books', bookRoutes); // Định tuyến cho sách (books)
