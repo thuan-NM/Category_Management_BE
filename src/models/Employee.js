@@ -29,6 +29,11 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'employee'
+    }
 }, {
     tableName: 'employees',
     timestamps: false,

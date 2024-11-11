@@ -8,8 +8,10 @@ import {
     createLibraryCardWithExpiry
 } from '../controllers/libraryCardController.js';
 import { controller } from '../middlewares/index.js';
+import auth from '../middlewares/auth.js';
 
 const router = express.Router();
+router.use(auth); // Apply auth middleware to all routes below this line
 
 router.post('/', controller(createLibraryCard));
 router.post('/with-expiry', controller(createLibraryCardWithExpiry));
