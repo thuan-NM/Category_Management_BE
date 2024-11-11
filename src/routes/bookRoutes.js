@@ -1,3 +1,5 @@
+// routes/bookRoutes.js
+
 import express from 'express';
 import {
     createBook,
@@ -6,14 +8,14 @@ import {
     updateBook,
     deleteBook,
 } from '../controllers/bookController.js';
-import { controller } from '../middlewares/index.js';
 
 const router = express.Router();
 
-router.post('/', controller(createBook));
-router.get('/', controller(getAllBooks));
-router.get('/:id', controller(getBookById));
-router.put('/:id', controller(updateBook));
-router.delete('/:id', controller(deleteBook));
+// GET /books?title=...&genre=...&author=...&publisher=...&publicationYearFrom=...&publicationYearTo=...&inStock=...&sortBy=...&order=...&page=...&limit=...
+router.post('/', createBook);
+router.get('/', getAllBooks);
+router.get('/:id', getBookById);
+router.put('/:id', updateBook);
+router.delete('/:id', deleteBook);
 
 export default router;

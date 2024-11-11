@@ -1,9 +1,12 @@
+// src/services/bookService.js
+
 import { Book, Author, Genre, Publisher, BorrowingDetails } from '../models/index.js';
 import sequelize from '../config/db.config.js';
+import { Op } from 'sequelize'; // Ensure Op is imported
 import createHttpError from 'http-errors';
 
 // Thêm mới Book với Transaction
-const createBook = async(bookData) => {
+const createBook = async (bookData) => {
     const transaction = await sequelize.transaction();
     try {
         const book = await Book.create(bookData, { transaction });
@@ -15,37 +18,123 @@ const createBook = async(bookData) => {
     }
 };
 
-// Lấy tất cả Book với tìm kiếm, sắp xếp và phân trang
-const getAllBooks = async(query = {}) => {
-    const { search, sortBy, order, page, limit } = query;
+// Lấy tất cả Book với tìm kiếm, sắp xếp, phân trang và lọc
+const getAllBooks = async (query = {}) => {
+    const {
+        title = '',
+        genre = '',
+        author = '',
+        publisher = '',
+        publicationYearFrom = '',
+        publicationYearTo = '',
+        inStock = false,
+        sortBy = 'title',
+        order = 'asc',
+        page = 1,
+        limit = 10,
+    } = query;
+
     const where = {};
 
-    if (search) {
-        where.title = sequelize.where(
-            sequelize.fn('LOWER', sequelize.col('title')),
-            'LIKE',
-            `%${search.toLowerCase()}%`
-        );
+    // Filter by Title
+    if (title) {
+        where.title = {
+            [Op.like]: `%${title}%`, // Changed from Op.iLike to Op.like
+        };
     }
 
-    const offset = page && limit ? (page - 1) * limit : 0;
+    // Filter by Publication Year Range
+    if (publicationYearFrom || publicationYearTo) {
+        where.publication_year = {};
+        if (publicationYearFrom) {
+            where.publication_year[Op.gte] = parseInt(publicationYearFrom);
+        }
+        if (publicationYearTo) {
+            where.publication_year[Op.lte] = parseInt(publicationYearTo);
+        }
+    }
+
+    // Filter by In Stock
+    if (inStock === 'true' || inStock === true) {
+        where.quantity = { [Op.gt]: 0 };
+    }
+
+    // Include conditions for Genre, Author, Publisher
+    const include = [];
+    if (author) {
+        include.push({
+            model: Author,
+            where: {
+                author_name: {
+                    [Op.like]: `%${author}%`, // Changed from Op.iLike to Op.like
+                },
+            },
+        });
+    } else {
+        include.push({ model: Author });
+    }
+
+    if (genre) {
+        include.push({
+            model: Genre,
+            where: {
+                genre_name: {
+                    [Op.like]: `%${genre}%`, // Changed from Op.iLike to Op.like
+                },
+            },
+        });
+    } else {
+        include.push({ model: Genre });
+    }
+
+    if (publisher) {
+        include.push({
+            model: Publisher,
+            where: {
+                publisher_name: {
+                    [Op.like]: `%${publisher}%`, // Changed from Op.iLike to Op.like
+                },
+            },
+        });
+    } else {
+        include.push({ model: Publisher });
+    }
+
+    // Pagination
+    const offset = (page - 1) * limit;
+
+    // Adjust sortBy to handle associated model fields
+    let orderOption = [];
+    if (sortBy) {
+        switch (sortBy) {
+            case 'author':
+                orderOption.push([{ model: Author }, 'author_name', order.toUpperCase()]);
+                break;
+            case 'genre':
+                orderOption.push([{ model: Genre }, 'genre_name', order.toUpperCase()]);
+                break;
+            case 'publisher':
+                orderOption.push([{ model: Publisher }, 'publisher_name', order.toUpperCase()]);
+                break;
+            default:
+                orderOption.push([sortBy, order.toUpperCase()]);
+        }
+    }
 
     const books = await Book.findAndCountAll({
         where,
-        order: sortBy ? [
-            [sortBy, order === 'desc' ? 'DESC' : 'ASC']
-        ] : [],
-        include: [Author, Genre, Publisher],
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset || undefined,
+        include,
+        order: orderOption.length ? orderOption : [['title', 'ASC']],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        distinct: true,
     });
 
     return books;
 };
 
-
 // Lấy Book theo ID
-const getBookById = async(id) => {
+const getBookById = async (id) => {
     const book = await Book.findByPk(id, {
         include: [Author, Genre, Publisher, BorrowingDetails],
     });
@@ -56,7 +145,7 @@ const getBookById = async(id) => {
 };
 
 // Cập nhật Book với Transaction
-const updateBook = async(id, updateData) => {
+const updateBook = async (id, updateData) => {
     const transaction = await sequelize.transaction();
     try {
         const book = await getBookById(id);
@@ -70,8 +159,8 @@ const updateBook = async(id, updateData) => {
     }
 };
 
-// Xóa Book với Trigger để xử lý dữ liệu liên quan
-const deleteBook = async(id) => {
+// Xóa Book với Transaction
+const deleteBook = async (id) => {
     const transaction = await sequelize.transaction();
     try {
         const book = await getBookById(id);
@@ -84,11 +173,12 @@ const deleteBook = async(id) => {
 };
 
 // Thống kê số lượng sách theo thể loại
-const getBooksCountByGenre = async() => {
+const getBooksCountByGenre = async () => {
     const result = await Genre.findAll({
         attributes: [
             'genre_id',
-            'genre_name', [sequelize.fn('COUNT', sequelize.col('Books.book_id')), 'books_count'],
+            'genre_name',
+            [sequelize.fn('COUNT', sequelize.col('Books.book_id')), 'books_count'],
         ],
         include: [{
             model: Book,
@@ -100,7 +190,7 @@ const getBooksCountByGenre = async() => {
 };
 
 // Stored Procedure: Thêm nhiều sách cùng lúc
-const createBooksBulk = async(booksData) => {
+const createBooksBulk = async (booksData) => {
     const transaction = await sequelize.transaction();
     try {
         const books = await Book.bulkCreate(booksData, { transaction });
