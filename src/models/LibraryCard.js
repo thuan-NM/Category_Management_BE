@@ -25,6 +25,13 @@ const LibraryCard = sequelize.define('LibraryCard', {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    reader_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    address: {
+        type: DataTypes.STRING,
+    },
 }, {
     tableName: 'library_cards',
     timestamps: false,
@@ -63,6 +70,5 @@ LibraryCard.beforeValidate(async(libraryCard, options) => {
         throw new Error('Error generating card number with transaction');
     }
 });
-
 
 export default LibraryCard;
