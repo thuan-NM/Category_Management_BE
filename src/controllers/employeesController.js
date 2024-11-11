@@ -1,3 +1,4 @@
+import createHttpError from 'http-errors';
 import {
     createEmployee as createEmployeeService,
     getAllEmployees as getAllEmployeesService,
@@ -64,16 +65,33 @@ const deleteEmployee = async(req, res) => {
 
 // Đăng nhập Employee
 const loginEmployee = async(req, res) => {
-    const { username, password } = req.body;
-    const employee = await loginEmployeeService(username, password);
-    res.fly({
-        status: 200,
-        data: employee,
-        code: 'employee_s_06',
-        message: 'Login employee successfully'
-    });
+    try {
+        const { username, password } = req.body;
+        const employee = await loginEmployeeService(username, password);
+        res.status(200).json({
+            status: 200,
+            data: employee,
+            code: 'employee_s_06',
+            message: 'Login employee successfully'
+        });
+    } catch (error) {
+        if (error instanceof createHttpError.HttpError) {
+            // Handle known error thrown by service
+            res.status(error.statusCode).json({
+                status: error.statusCode,
+                message: error.message,
+                code: 'employee_error'
+            });
+        } else {
+            // Handle unknown errors
+            res.status(500).json({
+                status: 500,
+                message: 'An unexpected error occurred',
+                code: 'employee_error_unexpected'
+            });
+        }
+    }
 };
-
 // Đếm số lượng nhân viên
 const countEmployees = async(req, res) => {
     const count = await countEmployeesService();
