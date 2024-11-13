@@ -30,12 +30,23 @@ const getAllAuthors = async(query = {}) => {
 };
 
 // Lấy Author theo ID
-const getAuthorById = async(id) => {
-    const author = await Author.findByPk(id, { include: [Book] });
-    if (!author) {
-        throw createHttpError(404, 'Author not found');
+const getAuthorById = async (id) => {
+    try {
+        const author = await Author.findByPk(id, {
+            include: [Book],  // Thêm thông tin Book liên quan nếu cần
+        });
+        console.log('author-xx',author)
+
+        // Kiểm tra xem tác giả có tồn tại không
+        if (!author) {
+            throw createHttpError(404, 'Author not found');
+        }
+
+        return author;
+    } catch (error) {
+        console.error('Error fetching author:', error);
+        throw createHttpError(500, 'Internal Server Error');
     }
-    return author;
 };
 
 // Cập nhật Author với Transaction
@@ -81,7 +92,21 @@ const getBooksCountByAuthor = async() => {
     });
     return result;
 };
-
+const getAuthorStatistics = async () => {
+    try {
+        const statistics = await Author.findAll({
+            attributes: [
+                [sequelize.fn('COUNT', sequelize.col('author_id')), 'totalAuthors'],
+            ],
+            raw: true,
+        });
+        
+        return statistics[0];
+    } catch (error) {
+        console.error('Error fetching author statistics:', error);
+        throw error;  // Ném lỗi để controller xử lý
+    }
+};
 export {
     createAuthor,
     getAllAuthors,
@@ -89,4 +114,5 @@ export {
     updateAuthor,
     deleteAuthor,
     getBooksCountByAuthor,
+    getAuthorStatistics,
 };
