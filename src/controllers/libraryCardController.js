@@ -4,94 +4,85 @@ import {
     getLibraryCardByNumber as getLibraryCardByNumberService,
     updateLibraryCard as updateLibraryCardService,
     deleteLibraryCard as deleteLibraryCardService,
-    getReadersCountByLibraryCard as getReadersCountByLibraryCardService,
     createLibraryCardWithExpiry as createLibraryCardWithExpiryService
 } from '../services/libraryCardService.js';
 
 // Thêm mới LibraryCard
 const createLibraryCard = async(req, res, next) => {
     try {
-        // Chỉ lấy những dữ liệu khác ngoài card_number từ request body
         const { card_number, ...cardData } = req.body;
-
-        // Gọi tới service để tạo LibraryCard, không có card_number
         const card = await createLibraryCardService(cardData);
-        res.fly({
-            status: 201,
-            data: card,
-            code: 'librarycard_s_01',
-            message: 'Create new library card successfully'
+        res.status(201).json({
+            message: 'Create new library card successfully',
+            data: card
         });
     } catch (error) {
-        next(error); // Đưa lỗi tới middleware xử lý lỗi
+        next(error);
     }
 };
 
-
-
 // Lấy tất cả LibraryCards
-const getAllLibraryCards = async(req, res) => {
-    const cards = await getAllLibraryCardsService(req.query);
-    res.fly({
-        status: 200,
-        data: cards,
-        code: 'librarycard_s_02',
-        message: 'Get all library cards successfully'
-    });
+const getAllLibraryCards = async(req, res, next) => {
+    try {
+        const cards = await getAllLibraryCardsService(req.query);
+        res.status(200).json({
+            message: 'Get all library cards successfully',
+            data: cards
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 // Lấy LibraryCard theo số thẻ
-const getLibraryCardByNumber = async(req, res) => {
-    const card = await getLibraryCardByNumberService(req.params.card_number);
-    res.fly({
-        status: 200,
-        data: card,
-        code: 'librarycard_s_03',
-        message: 'Get library card successfully'
-    });
+const getLibraryCardByNumber = async(req, res, next) => {
+    try {
+        const card = await getLibraryCardByNumberService(req.params.card_number);
+        res.status(200).json({
+            message: 'Get library card successfully',
+            data: card
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 // Cập nhật LibraryCard
-const updateLibraryCard = async(req, res) => {
-    const card = await updateLibraryCardService(req.params.card_number, req.body);
-    res.fly({
-        status: 200,
-        data: card,
-        code: 'librarycard_s_04',
-        message: 'Update library card successfully'
-    });
+const updateLibraryCard = async(req, res, next) => {
+    try {
+        const card = await updateLibraryCardService(req.params.card_number, req.body);
+        res.status(200).json({
+            message: 'Update library card successfully',
+            data: card
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 // Xóa LibraryCard
-const deleteLibraryCard = async(req, res) => {
-    await deleteLibraryCardService(req.params.card_number);
-    res.fly({
-        status: 204,
-        code: 'librarycard_s_05',
-        message: 'Delete library card successfully'
-    });
-};
-
-// Thống kê số lượng độc giả theo thẻ thư viện
-const getReadersCountByLibraryCard = async(req, res) => {
-    const result = await getReadersCountByLibraryCardService();
-    res.fly({
-        status: 200,
-        data: result,
-        code: 'librarycard_s_06',
-        message: 'Get readers count by library card successfully'
-    });
+const deleteLibraryCard = async(req, res, next) => {
+    try {
+        await deleteLibraryCardService(req.params.card_number);
+        res.status(204).json({
+            message: 'Delete library card successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 // Tạo thẻ thư viện với ngày hết hạn tự động
-const createLibraryCardWithExpiry = async(req, res) => {
-    const card = await createLibraryCardWithExpiryService(req.body, req.body.expiryDays);
-    res.fly({
-        status: 201,
-        data: card,
-        code: 'librarycard_s_07',
-        message: 'Create new library card with expiry date successfully'
-    });
+const createLibraryCardWithExpiry = async(req, res, next) => {
+    try {
+        const card = await createLibraryCardWithExpiryService(req.body, req.body.expiryDays);
+        res.status(201).json({
+            message: 'Create new library card with expiry date successfully',
+            data: card
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 export {
@@ -100,6 +91,5 @@ export {
     getLibraryCardByNumber,
     updateLibraryCard,
     deleteLibraryCard,
-    getReadersCountByLibraryCard,
     createLibraryCardWithExpiry
 };
