@@ -35,8 +35,6 @@ const createEmployee = async(employeeData) => {
 const getAllEmployees = async(query) => {
     const { full_name, phone_number, sortBy, order, page = 1, limit = 10 } = query;
 
-    console.log('Received query parameters:', query); // Log các tham số tìm kiếm
-
     const where = {};
 
     if (full_name) {
@@ -51,8 +49,6 @@ const getAllEmployees = async(query) => {
         };
     }
 
-    console.log('Constructed where clause:', where); // Log điều kiện tìm kiếm
-
     const offset = (page - 1) * limit;
 
     const employees = await Employee.findAndCountAll({
@@ -66,8 +62,6 @@ const getAllEmployees = async(query) => {
         limit: parseInt(limit),
         offset: parseInt(offset),
     });
-
-    console.log('Found employees:', employees); // Log kết quả tìm kiếm
 
     return employees;
 };
@@ -139,7 +133,6 @@ const loginEmployee = async(username, password) => {
             employee_id: employee.employee_id,
             full_name: employee.full_name,
             phone_number: employee.phone_number,
-            email: employee.email,
             role: employee.role,
             birth_date: employee.birth_date,
         },

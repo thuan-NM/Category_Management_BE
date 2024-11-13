@@ -8,9 +8,7 @@ import Employee from './Employee.js';
 import Borrowing from './Borrowing.js';
 import BorrowingDetails from './BorrowingDetails.js';
 
-// Định nghĩa quan hệ
-
-// 1. Quan hệ giữa Book và Author, Genre, Publisher
+// Define Relationships
 Author.hasMany(Book, { foreignKey: 'author_id', onDelete: 'SET NULL' });
 Book.belongsTo(Author, { foreignKey: 'author_id', onDelete: 'SET NULL' });
 
@@ -20,19 +18,78 @@ Book.belongsTo(Genre, { foreignKey: 'genre_id', onDelete: 'SET NULL' });
 Publisher.hasMany(Book, { foreignKey: 'publisher_id', onDelete: 'SET NULL' });
 Book.belongsTo(Publisher, { foreignKey: 'publisher_id', onDelete: 'SET NULL' });
 
-// 3. Quan hệ giữa Borrowing và LibraryCard, Employee
 LibraryCard.hasMany(Borrowing, { foreignKey: 'card_number', onDelete: 'CASCADE' });
 Borrowing.belongsTo(LibraryCard, { foreignKey: 'card_number', onDelete: 'CASCADE' });
 
 Employee.hasMany(Borrowing, { foreignKey: 'employee_id', onDelete: 'SET NULL' });
 Borrowing.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'SET NULL' });
 
-// 4. Quan hệ giữa BorrowingDetails và Borrowing, Book
 Borrowing.hasMany(BorrowingDetails, { foreignKey: 'borrow_id', onDelete: 'CASCADE' });
 BorrowingDetails.belongsTo(Borrowing, { foreignKey: 'borrow_id', onDelete: 'CASCADE' });
 
 Book.hasMany(BorrowingDetails, { foreignKey: 'book_id', onDelete: 'CASCADE' });
 BorrowingDetails.belongsTo(Book, { foreignKey: 'book_id', onDelete: 'CASCADE' });
+
+// Exporting Models and Fields Mapping
+const fieldsMapping = {
+    Employee: [
+        'employee_id',
+        'full_name',
+        'birth_date',
+        'phone_number',
+        'parent_number',
+        'username',
+        'role'
+    ],
+    Genre: [
+        'genre_id',
+        'genre_name',
+        'description'
+    ],
+    Publisher: [
+        'publisher_id',
+        'publisher_name',
+        'address',
+        'email',
+        'representative_info'
+    ],
+    Book: [
+        'book_id',
+        'title',
+        'publication_year',
+        'Author.author_name',
+        'Genre.genre_name',
+        'Publisher.publisher_name',
+        'quantity'
+    ],
+    LibraryCard: [
+        'card_number',
+        'start_date',
+        'expiry_date',
+        'reader_name',
+        'address',
+        'notes'
+    ],
+    Borrowing: [
+        'borrow_id',
+        'LibraryCard.reader_name',
+        'Employee.full_name',
+        'borrow_date'
+    ],
+    BorrowingDetails: [
+        'borrow_detail_id',
+        'Borrowing.borrow_id',
+        'Book.title',
+        'return_date',
+        'notes'
+    ],
+    Author: [
+        'author_id',
+        'author_name',
+        'website',
+        'notes'
+    ]
+};
 
 export {
     sequelize,
@@ -44,4 +101,5 @@ export {
     Employee,
     Borrowing,
     BorrowingDetails,
+    fieldsMapping
 };
