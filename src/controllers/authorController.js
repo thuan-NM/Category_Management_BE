@@ -4,6 +4,7 @@ import {
     getAuthorById as getAuthorByIdService,
     updateAuthor as updateAuthorService,
     deleteAuthor as deleteAuthorService,
+    getAuthorStatistics as getAuthorStatisticsService
 } from '../services/authorService.js';
 
 // Thêm mới Author
@@ -59,6 +60,27 @@ const deleteAuthor = async(req, res) => {
         message: 'Delete author successfully',
     });
 };
+const getAuthorStatistics = async (req, res) => {
+    try {
+        const statistics = await getAuthorStatisticsService();
+        
+        // Sử dụng res.fly thay vì res.json
+        res.fly({
+            status: 200,
+            code: 'author_s_01',
+            message: 'Author statistics fetched successfully',
+            data: statistics,
+        });
+    } catch (error) {
+        // Xử lý lỗi nếu có
+        console.error('Error fetching author statistics:', error);
+        res.fly({
+            status: 500,
+            code: 'author_e_01',
+            message: 'Error fetching author statistics',
+        });
+    }
+};
 
 export {
     createAuthor,
@@ -66,4 +88,5 @@ export {
     getAuthorById,
     updateAuthor,
     deleteAuthor,
+    getAuthorStatistics
 };
