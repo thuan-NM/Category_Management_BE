@@ -1,6 +1,9 @@
-import { LibraryCard } from '../models/index.js';
+// src/services/libraryCardService.js
+
+import LibraryCard from '../models/LibraryCard.js';
 import sequelize from '../config/db.config.js';
 import createHttpError from 'http-errors';
+import { Op } from 'sequelize';
 
 // Thêm mới LibraryCard với Transaction
 const createLibraryCard = async(cardData) => {
@@ -16,15 +19,16 @@ const createLibraryCard = async(cardData) => {
     }
 };
 
-
 // Lấy tất cả LibraryCard với tìm kiếm và sắp xếp
 const getAllLibraryCards = async(query) => {
     const { search, sortBy, order, page, limit } = query;
     const where = {};
+
     if (search) {
-        where.card_number = {
-            [sequelize.Op.like]: `%${search}%`
-        };
+        where[Op.or] = [
+            { card_number: { [Op.like]: `%${search}%` } },
+            { reader_name: { [Op.like]: `%${search}%` } }
+        ];
     }
 
     const offset = page && limit ? (page - 1) * limit : 0;
@@ -43,7 +47,7 @@ const getAllLibraryCards = async(query) => {
 
 // Lấy LibraryCard theo card_number
 const getLibraryCardByNumber = async(card_number) => {
-    const card = await LibraryCard.findByPk(card_number, { include: [Reader] });
+    const card = await LibraryCard.findByPk(card_number);
     if (!card) {
         throw createHttpError(404, 'Library Card not found');
     }
@@ -65,7 +69,7 @@ const updateLibraryCard = async(card_number, updateData) => {
     }
 };
 
-// Xóa LibraryCard với Trigger để xử lý dữ liệu liên quan
+// Xóa LibraryCard với Transaction
 const deleteLibraryCard = async(card_number) => {
     const transaction = await sequelize.transaction();
     try {
