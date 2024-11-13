@@ -43,7 +43,7 @@ const getAllLibraryCards = async(query) => {
 
 // Lấy LibraryCard theo card_number
 const getLibraryCardByNumber = async(card_number) => {
-    const card = await LibraryCard.findByPk(card_number, { include: [Reader] });
+    const card = await LibraryCard.findByPk(card_number);
     if (!card) {
         throw createHttpError(404, 'Library Card not found');
     }
