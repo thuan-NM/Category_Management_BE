@@ -10,6 +10,7 @@ const Employee = sequelize.define('Employee', {
     full_name: {
         type: DataTypes.STRING,
         allowNull: false,
+
     },
     birth_date: {
         type: DataTypes.DATEONLY,
@@ -21,9 +22,12 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.STRING,
     },
     username: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(50), // Giới hạn độ dài tối đa của username là 20 ký tự
         unique: true,
         allowNull: false,
+        validate: {
+            len: [4, 50], // Giới hạn độ dài username từ 4 đến 20 ký tự
+        },
     },
     password: {
         type: DataTypes.STRING,

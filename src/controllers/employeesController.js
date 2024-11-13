@@ -9,6 +9,7 @@ import {
     loginEmployee as loginEmployeeService,
     countEmployees as countEmployeesService
 } from '../services/employeeService.js';
+import { Parser } from 'json2csv'; // Import Parser từ json2csv
 import createHttpError from 'http-errors';
 
 // Thêm mới Employee
@@ -221,5 +222,5 @@ export {
     updateEmployee,
     deleteEmployee,
     loginEmployee,
-    countEmployees
+    countEmployees,
 };

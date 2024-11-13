@@ -7,6 +7,7 @@ import publisherRoutes from './publisherRoutes.js';
 import borrowingDetailsRoutes from './borrowingDetailsRoutes.js';
 import authorRoutes from './authorRoutes.js';
 import bookRoutes from './bookRoutes.js';
+import exportRoutes from './exportRoutes.js';
 
 import { errorMiddleware, notFoundMiddleware, responseMiddleware } from "../middlewares/index.js";
 
@@ -24,6 +25,8 @@ router.use('/publishers', publisherRoutes);
 router.use('/borrowingdetails', borrowingDetailsRoutes);
 router.use('/authors', authorRoutes); // Định tuyến cho tác giả (authors)
 router.use('/books', bookRoutes); // Định tuyến cho sách (books)
+router.use('/export', exportRoutes);
+
 
 // Middleware xử lý khi không tìm thấy route nào phù hợp
 router.use(notFoundMiddleware);

@@ -7,7 +7,7 @@ import {
     updateEmployee,
     deleteEmployee,
     loginEmployee,
-    countEmployees
+    countEmployees,
 } from '../controllers/employeesController.js';
 import { controller } from '../middlewares/index.js';
 import auth from '../middlewares/auth.js'; // Import auth middleware
