@@ -1,37 +1,40 @@
-import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.config.js';
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.config.js";
 
-const BorrowingDetails = sequelize.define('BorrowingDetails', {
+const BorrowingDetails = sequelize.define(
+  "BorrowingDetails",
+  {
     borrow_detail_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
     borrow_id: {
-        type: DataTypes.UUID,
-        references: {
-            model: 'borrowings',
-            key: 'borrow_id',
-        },
-        onDelete: 'CASCADE',
+      type: DataTypes.UUID,
+      references: { model: "borrowings", key: "borrow_id" },
+      onDelete: "CASCADE",
     },
     book_id: {
-        type: DataTypes.UUID,
-        references: {
-            model: 'books',
-            key: 'book_id',
-        },
-        onDelete: 'CASCADE',
+      type: DataTypes.UUID,
+      references: { model: "books", key: "book_id" },
+      onDelete: "CASCADE",
     },
-    return_date: {
-        type: DataTypes.DATEONLY,
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
     },
-    notes: {
-        type: DataTypes.TEXT,
+    return_date: { type: DataTypes.DATEONLY },
+    notes: { type: DataTypes.TEXT },
+    status: {
+      type: DataTypes.STRING,
+      defaultValue: "borrowed", // Giá trị mặc định là 'borrowed'
     },
-}, {
-    tableName: 'borrowing_details',
+  },
+  {
+    tableName: "borrowing_details",
     timestamps: false,
-});
+  }
+);
 
 export default BorrowingDetails;
