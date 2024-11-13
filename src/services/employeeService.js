@@ -1,11 +1,19 @@
-import jwt from 'jsonwebtoken';
+// src/services/employeeService.js
+
+import { Op } from 'sequelize'; // Import Op trực tiếp từ 'sequelize'
 import { Employee } from '../models/index.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import createHttpError from 'http-errors';
 import sequelize from '../config/db.config.js';
 
-const JWT_SECRET = process.env.JWT_SECRET
-    // Thêm mới Employee với Transaction
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+}
+
+// Thêm mới Employee với Transaction
 const createEmployee = async(employeeData) => {
     const { password } = employeeData;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -23,30 +31,30 @@ const createEmployee = async(employeeData) => {
     }
 };
 
-// Lấy tất cả Employee với tìm kiếm và sắp xếp
+// Lấy tất cả Employee với tìm kiếm và phân trang
 const getAllEmployees = async(query) => {
-    const { search, sortBy, order, page, limit } = query;
+    const { full_name, phone_number, sortBy, order, page = 1, limit = 10 } = query;
+
+    console.log('Received query parameters:', query); // Log các tham số tìm kiếm
+
     const where = {};
-    if (search) {
-        where.$or = [{
-                full_name: {
-                    [sequelize.Op.like]: `%${search}%`
-                }
-            },
-            {
-                phone_number: {
-                    [sequelize.Op.like]: `%${search}%`
-                }
-            },
-            {
-                username: {
-                    [sequelize.Op.like]: `%${search}%`
-                }
-            },
-        ];
+
+    if (full_name) {
+        where.full_name = {
+            [Op.like]: `%${full_name}%`
+        };
     }
 
-    const offset = page && limit ? (page - 1) * limit : 0;
+    if (phone_number) {
+        where.phone_number = {
+            [Op.like]: `%${phone_number}%`
+        };
+    }
+
+    console.log('Constructed where clause:', where); // Log điều kiện tìm kiếm
+
+    const offset = (page - 1) * limit;
+
     const employees = await Employee.findAndCountAll({
         where,
         order: sortBy ? [
@@ -55,13 +63,16 @@ const getAllEmployees = async(query) => {
             ['full_name', 'ASC']
         ],
         attributes: { exclude: ['password'] }, // Bỏ mật khẩu khỏi kết quả
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset || undefined,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
     });
+
+    console.log('Found employees:', employees); // Log kết quả tìm kiếm
+
     return employees;
 };
 
-// Lấy Employee theo ID
+// Các hàm khác không thay đổi
 const getEmployeeById = async(id) => {
     const employee = await Employee.findByPk(id, {
         attributes: { exclude: ['password'] },
@@ -72,7 +83,6 @@ const getEmployeeById = async(id) => {
     return employee;
 };
 
-// Cập nhật Employee với Transaction
 const updateEmployee = async(id, updateData) => {
     const transaction = await sequelize.transaction();
     try {
@@ -93,7 +103,6 @@ const updateEmployee = async(id, updateData) => {
     }
 };
 
-// Xóa Employee với Trigger để xử lý dữ liệu liên quan
 const deleteEmployee = async(id) => {
     const transaction = await sequelize.transaction();
     try {
@@ -106,32 +115,33 @@ const deleteEmployee = async(id) => {
     }
 };
 
-// Stored Procedure: Đăng nhập Employee
 const loginEmployee = async(username, password) => {
     const employee = await Employee.findOne({ where: { username } });
     if (!employee) {
-        throw createHttpError(404, 'Employee not found');
+        throw createHttpError(401, 'Thông tin đăng nhập không hợp lệ'); // Thông báo hợp nhất cho bảo mật
     }
 
     const isMatch = await bcrypt.compare(password, employee.password);
     if (!isMatch) {
-        throw createHttpError(401, 'Invalid credentials');
+        throw createHttpError(401, 'Thông tin đăng nhập không hợp lệ');
     }
-    // Generate a JWT token
+
+    // Tạo token JWT với payload giới hạn
     const token = jwt.sign({
-            id: employee.id,
-            user: employee,
+            id: employee.employee_id,
+            role: employee.role,
         },
-        JWT_SECRET, { expiresIn: '10h' } // Token expires in 1 hour
+        JWT_SECRET, { expiresIn: '10h' }
     );
 
     return {
         user: {
+            employee_id: employee.employee_id,
             full_name: employee.full_name,
             phone_number: employee.phone_number,
             email: employee.email,
             role: employee.role,
-            dob: employee.birth_date,
+            birth_date: employee.birth_date,
         },
         token,
     };
