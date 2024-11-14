@@ -69,13 +69,18 @@ const fieldsMapping = {
     Borrowing: [
         'LibraryCard.reader_name',
         'Employee.full_name',
-        'borrow_date'
+        'borrow_date',
+        'is_returned'
     ],
     BorrowingDetails: [
-        'Borrowing.borrow_id',
+        'Borrowing.borrow_date',
+        'Borrowing.LibraryCard.reader_name',
+        'Borrowing.Employee.full_name',
         'Book.title',
+        'Borrowing.is_returned',
         'return_date',
-        'notes'
+        'quantity',
+        'notes',
     ],
     Author: [
         'author_name',

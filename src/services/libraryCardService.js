@@ -102,6 +102,27 @@ const createLibraryCardWithExpiry = async(cardData, expiryDays) => {
         throw error;
     }
 };
+const unlockLibraryCard = async (card_number) => {
+    const transaction = await sequelize.transaction();
+    try {
+        const libraryCard = await LibraryCard.findByPk(card_number, {
+            transaction,
+        });
+
+        if (!libraryCard) {
+            throw createHttpError(404, 'Library card not found');
+        }
+
+        libraryCard.is_locked = false;
+        libraryCard.late_return_count = 0; // Reset late return count
+        await libraryCard.save({ transaction });
+        await transaction.commit();
+        return libraryCard;
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+};
 
 export {
     createLibraryCard,
@@ -110,4 +131,5 @@ export {
     updateLibraryCard,
     deleteLibraryCard,
     createLibraryCardWithExpiry,
+    unlockLibraryCard,
 };
