@@ -1,6 +1,7 @@
 import { Publisher, Book } from '../models/index.js';
 import createHttpError from 'http-errors';
 import sequelize from '../config/db.config.js';
+import { Op } from 'sequelize'; // Import Op trực tiếp từ 'sequelize'
 
 // Thêm mới Publisher
 const createPublisher = async(publisherData) => {
@@ -8,7 +9,7 @@ const createPublisher = async(publisherData) => {
 };
 
 // Lấy tất cả Publisher với tìm kiếm và sắp xếp
-const getAllPublishers = async (query) => {
+const getAllPublishers = async(query) => {
     const { publisher_name, email, sortBy, order, page = 1, limit = 10 } = query;
 
     const where = {};
