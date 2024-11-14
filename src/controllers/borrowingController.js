@@ -9,6 +9,8 @@ import {
   returnAllBooks as returnAllBooksService,
   returnSingleBook as returnSingleBookService,
   updateStatus as updateStatusService,
+  getBorrowingStatsByTimeInterval as getBorrowingStatsByTimeIntervalService,
+  getTopBorrowedBooks as getTopBorrowedBooksService,
 } from "../services/borrowingService.js";
 
 // Thêm mới Borrowing
@@ -121,6 +123,26 @@ const updateStatus = async (req, res, next) => {
   });
 };
 
+const getBorrowingStatistics = async (req, res, next) => {
+  try {
+    const { interval } = req.query;
+    const data = await getBorrowingStatsByTimeIntervalService(interval);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getTopBorrowedBooks = async (req, res, next) => {
+  try {
+    const { limit } = req.query;
+    const data = await getTopBorrowedBooksService(parseInt(limit) || 10);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   createBorrowing,
   getAllBorrowings,
@@ -132,4 +154,6 @@ export {
   returnAllBooks,
   returnSingleBook,
   updateStatus,
+  getBorrowingStatistics,
+  getTopBorrowedBooks,
 };
