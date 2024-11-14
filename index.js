@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 sequelize.authenticate()
     .then(() => {
         console.log('Database connected...');
-        return sequelize.sync({ alter: true });
+        return sequelize.sync();
     })
     .then(() => {
         console.log('Database synchronized');
