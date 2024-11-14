@@ -21,9 +21,10 @@ const createLibraryCard = async(cardData) => {
 
 // Lấy tất cả LibraryCard với tìm kiếm và sắp xếp
 const getAllLibraryCards = async(query) => {
-    const { search, sortBy, order, page, limit } = query;
+    const { search, sortBy = 'card_number', order = 'asc', page = 1, limit = 10 } = query;
     const where = {};
 
+    // Search by card number or reader name
     if (search) {
         where[Op.or] = [
             { card_number: { [Op.like]: `%${search}%` } },
@@ -31,17 +32,17 @@ const getAllLibraryCards = async(query) => {
         ];
     }
 
-    const offset = page && limit ? (page - 1) * limit : 0;
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    // Find and count all records with pagination and sorting
     const cards = await LibraryCard.findAndCountAll({
         where,
-        order: sortBy ? [
-            [sortBy, order === 'desc' ? 'DESC' : 'ASC']
-        ] : [
-            ['card_number', 'ASC']
-        ],
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset || undefined,
+        order: [[sortBy, order.toUpperCase()]],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
     });
+
     return cards;
 };
 
