@@ -114,7 +114,6 @@ const unlockLibraryCard = async (card_number) => {
         }
 
         libraryCard.is_locked = false;
-        libraryCard.late_return_count = 0; // Reset late return count
         await libraryCard.save({ transaction });
         await transaction.commit();
         return libraryCard;

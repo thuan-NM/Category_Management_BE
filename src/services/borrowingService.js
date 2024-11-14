@@ -143,86 +143,96 @@ const returnAllBooks = async (borrowId, retryCount = 0) => {
 const returnSingleBook = async (borrowDetailId) => {
     const transaction = await sequelize.transaction();
     try {
-        const borrowingDetail = await BorrowingDetails.findByPk(borrowDetailId, {
-            transaction,
-        });
-
-        if (!borrowingDetail || borrowingDetail.return_date) {
-            throw createHttpError(404, 'Book not found or already returned');
+      const borrowingDetail = await BorrowingDetails.findByPk(borrowDetailId, {
+        transaction,
+      });
+  
+      if (!borrowingDetail || borrowingDetail.return_date) {
+        throw createHttpError(404, 'Book not found or already returned');
+      }
+  
+      const book = await Book.findByPk(borrowingDetail.book_id, { transaction });
+      if (!book) {
+        throw createHttpError(404, 'Book not found');
+      }
+  
+      console.log(`Original Book Quantity: ${book.quantity}`);
+      book.quantity += borrowingDetail.quantity;
+      console.log(`Updated Book Quantity: ${book.quantity}`);
+      borrowingDetail.return_date = new Date(); // Mark as returned
+      borrowingDetail.status = 'returned';
+      await borrowingDetail.save({ transaction });
+      await book.save({ transaction });
+  
+      // Update the maximum allowed books
+      const borrowing = await Borrowing.findByPk(borrowingDetail.borrow_id, {
+        transaction,
+      });
+      if (!borrowing) {
+        throw createHttpError(404, 'Borrowing record not found');
+      }
+  
+      const libraryCard = await LibraryCard.findByPk(borrowing.card_number, {
+        transaction,
+      });
+      if (!libraryCard) {
+        throw createHttpError(404, 'Library card not found');
+      }
+  
+      console.log(`Original Max Books Allowed: ${libraryCard.max_books_allowed}`);
+      libraryCard.max_books_allowed += borrowingDetail.quantity;
+      console.log(`Updated Max Books Allowed: ${libraryCard.max_books_allowed}`);
+  
+      // Check for overdue
+      const dueDate = getDueDate(borrowing.borrow_date);
+      console.log(`Due Date: ${dueDate}`);
+      console.log(`Return Date: ${borrowingDetail.return_date}`);
+  
+      // Explicitly convert to Date objects and compare using getTime()
+      const returnDate = new Date(borrowingDetail.return_date);
+      const calculatedDueDate = new Date(dueDate);
+      const isOverdue = returnDate.getTime() > calculatedDueDate.getTime();
+      console.log(`Is Overdue: ${isOverdue}`);
+  
+      if (isOverdue) {
+        // Overdue
+        libraryCard.late_return_count = (libraryCard.late_return_count || 0) + 1;
+        console.log(`Updated Late Return Count: ${libraryCard.late_return_count}`);
+        if (libraryCard.late_return_count > 3) {
+          libraryCard.is_locked = true;
+          console.log(`Library card ${libraryCard.card_number} is now locked.`);
         }
-
-        const book = await Book.findByPk(borrowingDetail.book_id, { transaction });
-        if (!book) {
-            throw createHttpError(404, 'Book not found');
-        }
-        console.log(`Original Book Quantity: ${book.quantity}`);
-        book.quantity += borrowingDetail.quantity;
-        console.log(`Updated Book Quantity: ${book.quantity}`);
-        borrowingDetail.return_date = new Date(); // Mark as returned
-        borrowingDetail.status = 'returned';
-        await borrowingDetail.save({ transaction });
-        await book.save({ transaction });
-
-        // Update the maximum allowed books
-        const borrowing = await Borrowing.findByPk(borrowingDetail.borrow_id, {
-            transaction,
-        });
-        if (!borrowing) {
-            throw createHttpError(404, 'Borrowing record not found');
-        }
-
-        const libraryCard = await LibraryCard.findByPk(borrowing.card_number, {
-            transaction,
-        });
-        if (!libraryCard) {
-            throw createHttpError(404, 'Library card not found');
-        }
-        console.log(`Original Max Books Allowed: ${libraryCard.max_books_allowed}`);
-        libraryCard.max_books_allowed += borrowingDetail.quantity;
-        console.log(`Updated Max Books Allowed: ${libraryCard.max_books_allowed}`);
-
-        // Check for overdue
-        const dueDate = getDueDate(borrowing.borrow_date);
-        console.log(`Due Date: ${dueDate}`);
-        console.log(`Return Date: ${borrowingDetail.return_date}`);
-        if (borrowingDetail.return_date > dueDate) {
-            // Overdue
-            libraryCard.late_return_count = (libraryCard.late_return_count || 0) + 1;
-            console.log(`Late Return Count: ${libraryCard.late_return_count}`);
-            if (libraryCard.late_return_count > 3) {
-                libraryCard.is_locked = true;
-                console.log(`Library card ${libraryCard.card_number} is now locked.`);
-            }
-        } else {
-            console.log('Book returned on time.');
-        }
-
-        // Check if all books in the borrowing have been returned
-        const allReturned = await BorrowingDetails.findAll({
-            where: {
-                borrow_id: borrowingDetail.borrow_id,
-                return_date: null,
-            },
-            transaction,
-        });
-
-        if (allReturned.length === 0) {
-            borrowing.is_returned = true;
-            await borrowing.save({ transaction });
-            console.log(`All books in borrowing ID ${borrowingDetail.borrow_id} have been returned.`);
-        }
-
-        await libraryCard.save({ transaction });
-        console.log(`Library card after update:`, libraryCard);
-
-        await transaction.commit();
-        return borrowingDetail;
+      } else {
+        console.log('Book returned on time.');
+      }
+  
+      // Check if all books in the borrowing have been returned
+      const allReturned = await BorrowingDetails.findAll({
+        where: {
+          borrow_id: borrowingDetail.borrow_id,
+          return_date: null,
+        },
+        transaction,
+      });
+  
+      if (allReturned.length === 0) {
+        borrowing.is_returned = true;
+        await borrowing.save({ transaction });
+        console.log(`All books in borrowing ID ${borrowingDetail.borrow_id} have been returned.`);
+      }
+  
+      await libraryCard.save({ transaction });
+      console.log(`Library card after update:`, libraryCard);
+  
+      await transaction.commit();
+      return borrowingDetail;
     } catch (error) {
-        await transaction.rollback();
-        console.error('Error in returnSingleBook:', error);
-        throw error;
+      await transaction.rollback();
+      console.error('Error in returnSingleBook:', error);
+      throw error;
     }
-};
+  };
+  
 
 const updateBorrowing = async (id, updateData) => {
     const transaction = await sequelize.transaction();
