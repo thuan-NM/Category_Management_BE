@@ -6,7 +6,7 @@ import { Op } from 'sequelize'; // Ensure Op is imported
 import createHttpError from 'http-errors';
 
 // Thêm mới Book với Transaction
-const createBook = async (bookData) => {
+const createBook = async(bookData) => {
     const transaction = await sequelize.transaction();
     try {
         const book = await Book.create(bookData, { transaction });
@@ -19,19 +19,20 @@ const createBook = async (bookData) => {
 };
 
 // Lấy tất cả Book với tìm kiếm, sắp xếp, phân trang và lọc
-const getAllBooks = async (query = {}) => {
+// Lấy tất cả Book với tìm kiếm, sắp xếp, phân trang và lọc
+const getAllBooks = async(query = {}) => {
     const {
         title = '',
-        genre = '',
-        author = '',
-        publisher = '',
-        publicationYearFrom = '',
-        publicationYearTo = '',
-        inStock = false,
-        sortBy = 'title',
-        order = 'asc',
-        page = 1,
-        limit = 10,
+            genre = '',
+            author = '',
+            publisher = '',
+            publicationYearFrom = '',
+            publicationYearTo = '',
+            inStock = false,
+            sortBy = 'title',
+            order = 'asc',
+            page = 1,
+            limit,
     } = query;
 
     const where = {};
@@ -39,7 +40,7 @@ const getAllBooks = async (query = {}) => {
     // Filter by Title
     if (title) {
         where.title = {
-            [Op.like]: `%${title}%`, // Changed from Op.iLike to Op.like
+            [Op.like]: `%${title}%`,
         };
     }
 
@@ -56,7 +57,9 @@ const getAllBooks = async (query = {}) => {
 
     // Filter by In Stock
     if (inStock === 'true' || inStock === true) {
-        where.quantity = { [Op.gt]: 0 };
+        where.quantity = {
+            [Op.gt]: 0
+        };
     }
 
     // Include conditions for Genre, Author, Publisher
@@ -66,7 +69,7 @@ const getAllBooks = async (query = {}) => {
             model: Author,
             where: {
                 author_name: {
-                    [Op.like]: `%${author}%`, // Changed from Op.iLike to Op.like
+                    [Op.like]: `%${author}%`,
                 },
             },
         });
@@ -79,7 +82,7 @@ const getAllBooks = async (query = {}) => {
             model: Genre,
             where: {
                 genre_name: {
-                    [Op.like]: `%${genre}%`, // Changed from Op.iLike to Op.like
+                    [Op.like]: `%${genre}%`,
                 },
             },
         });
@@ -92,16 +95,13 @@ const getAllBooks = async (query = {}) => {
             model: Publisher,
             where: {
                 publisher_name: {
-                    [Op.like]: `%${publisher}%`, // Changed from Op.iLike to Op.like
+                    [Op.like]: `%${publisher}%`,
                 },
             },
         });
     } else {
         include.push({ model: Publisher });
     }
-
-    // Pagination
-    const offset = (page - 1) * limit;
 
     // Adjust sortBy to handle associated model fields
     let orderOption = [];
@@ -121,12 +121,21 @@ const getAllBooks = async (query = {}) => {
         }
     }
 
+    // Pagination logic
+    const paginationOptions = {};
+    if (limit && parseInt(limit) > 0) {
+        paginationOptions.limit = parseInt(limit);
+        paginationOptions.offset = (page - 1) * parseInt(limit);
+    }
+
+    // Query database
     const books = await Book.findAndCountAll({
         where,
         include,
-        order: orderOption.length ? orderOption : [['title', 'ASC']],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+        order: orderOption.length ? orderOption : [
+            ['title', 'ASC']
+        ],
+        ...paginationOptions,
         distinct: true,
     });
 
@@ -134,7 +143,7 @@ const getAllBooks = async (query = {}) => {
 };
 
 // Lấy Book theo ID
-const getBookById = async (id) => {
+const getBookById = async(id) => {
     const book = await Book.findByPk(id, {
         include: [Author, Genre, Publisher, BorrowingDetails],
     });
@@ -145,7 +154,7 @@ const getBookById = async (id) => {
 };
 
 // Cập nhật Book với Transaction
-const updateBook = async (id, updateData) => {
+const updateBook = async(id, updateData) => {
     const transaction = await sequelize.transaction();
     try {
         const book = await getBookById(id);
@@ -160,7 +169,7 @@ const updateBook = async (id, updateData) => {
 };
 
 // Xóa Book với Transaction
-const deleteBook = async (id) => {
+const deleteBook = async(id) => {
     const transaction = await sequelize.transaction();
     try {
         const book = await getBookById(id);
@@ -173,12 +182,11 @@ const deleteBook = async (id) => {
 };
 
 // Thống kê số lượng sách theo thể loại
-const getBooksCountByGenre = async () => {
+const getBooksCountByGenre = async() => {
     const result = await Genre.findAll({
         attributes: [
             'genre_id',
-            'genre_name',
-            [sequelize.fn('COUNT', sequelize.col('Books.book_id')), 'books_count'],
+            'genre_name', [sequelize.fn('COUNT', sequelize.col('Books.book_id')), 'books_count'],
         ],
         include: [{
             model: Book,
@@ -190,7 +198,7 @@ const getBooksCountByGenre = async () => {
 };
 
 // Stored Procedure: Thêm nhiều sách cùng lúc
-const createBooksBulk = async (booksData) => {
+const createBooksBulk = async(booksData) => {
     const transaction = await sequelize.transaction();
     try {
         const books = await Book.bulkCreate(booksData, { transaction });
