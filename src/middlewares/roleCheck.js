@@ -4,8 +4,7 @@ import createHttpError from 'http-errors';
 // Middleware to check user's role for certain actions
 const roleCheck = (requiredRole) => {
     return (req, res, next) => {
-        const { user } = req.user;
-        console.log('User role:', user.role);
+        const { user } = req;
         // Check if user and user role are available
         if (!user || !user.role) {
             return next(createHttpError(403, 'Access denied.'));

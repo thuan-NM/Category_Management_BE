@@ -1,15 +1,15 @@
 import { Parser } from 'json2csv';
-import * as models from '../models/index.js'; // Import tất cả các models từ index.js
-import { fieldsMapping } from '../models/index.js'; // Import fieldsMapping từ index.js
+import * as models from '../models/index.js'; // Import all models
+import { fieldsMapping } from '../models/index.js'; // Import fieldsMapping
 import createHttpError from 'http-errors';
 
-const exportCSV = async(req, res, next) => {
+const exportCSV = async (req, res, next) => {
     const { collection } = req.params;
 
     console.log('Available collections:', Object.keys(models));
     console.log('Requested collection:', collection);
 
-    // Kiểm tra xem collection có hợp lệ không
+    // Check if the collection is valid
     if (!models[collection]) {
         return next(createHttpError(400, 'Invalid collection name'));
     }
@@ -18,106 +18,80 @@ const exportCSV = async(req, res, next) => {
 
     try {
         let data;
-
-        // Tạo đối tượng include để lấy dữ liệu join
         let include = [];
 
         if (collection === 'Book') {
-            include = [{
-                    model: models.Author,
-                    attributes: ['author_name']
-                },
-                {
-                    model: models.Genre,
-                    attributes: ['genre_name']
-                },
-                {
-                    model: models.Publisher,
-                    attributes: ['publisher_name']
-                }
+            include = [
+                { model: models.Author, attributes: ['author_name'] },
+                { model: models.Genre, attributes: ['genre_name'] },
+                { model: models.Publisher, attributes: ['publisher_name'] },
             ];
         } else if (collection === 'Borrowing') {
-            include = [{
-                    model: models.LibraryCard,
-                    attributes: ['reader_name']
-                },
-                {
-                    model: models.Employee,
-                    attributes: ['full_name']
-                }
+            include = [
+                { model: models.LibraryCard, attributes: ['reader_name'] },
+                { model: models.Employee, attributes: ['full_name'] },
             ];
         } else if (collection === 'BorrowingDetails') {
-            include = [{
-                    model: models.Borrowing,
-                    attributes: ['borrow_id']
-                },
+            include = [
                 {
-                    model: models.Book,
-                    attributes: ['title']
-                }
+                    model: models.Borrowing,
+                    attributes: ['borrow_id', 'borrow_date', 'is_returned'], // Include borrow_date and is_returned
+                    include: [
+                        { model: models.LibraryCard, attributes: ['reader_name'] },
+                        { model: models.Employee, attributes: ['full_name'] },
+                    ],
+                },
+                { model: models.Book, attributes: ['title'] },
             ];
         }
 
-        // Lấy dữ liệu từ bảng với JOIN nếu có include
+        // Fetch data from the database
         data = await Model.findAll({
-            raw: true,
-            include
+            include,
         });
 
         if (!data || data.length === 0) {
             return next(createHttpError(404, 'No data found for this collection'));
         }
 
-        // Chuyển đổi giá trị id sang tên nếu cần thiết
-        if (collection === 'Book') {
-            data = data.map(book => ({
-                ...book,
-                author_name: book['Author.author_name'],
-                genre_name: book['Genre.genre_name'],
-                publisher_name: book['Publisher.publisher_name']
-            }));
-        } else if (collection === 'Borrowing') {
-            data = data.map(borrowing => ({
-                ...borrowing,
-                reader_name: borrowing['LibraryCard.reader_name'],
-                employee_name: borrowing['Employee.full_name']
-            }));
-        } else if (collection === 'BorrowingDetails') {
-            data = data.map(detail => ({
-                ...detail,
-                borrowing_id: detail['Borrowing.borrow_id'],
-                book_title: detail['Book.title']
-            }));
-        }
-
-        // Sử dụng fields từ fieldsMapping được import từ index.js
+        // Use fields from fieldsMapping
         let fields = fieldsMapping[collection];
-        if (collection === 'Book') {
-            // Thay thế author_id, genre_id, publisher_id bằng tên tương ứng trong phần xuất CSV
-            fields = fields.map(field => {
-                if (field === 'author_id') return 'author_name';
-                if (field === 'genre_id') return 'genre_name';
-                if (field === 'publisher_id') return 'publisher_name';
-                return field;
+
+        // Map data according to fieldsMapping
+        data = data.map((record) => {
+            const mappedRecord = {};
+
+            fields.forEach((field) => {
+                if (field.includes('.')) {
+                    // Handle nested fields
+                    const fieldParts = field.split('.');
+                    let value = record;
+
+                    fieldParts.forEach((part) => {
+                        value = value ? value[part] : null;
+                    });
+
+                    // Custom handling for specific fields
+                    if (field === 'Borrowing.is_returned') {
+                        mappedRecord[field] = value ? 'Đã trả' : 'Chưa trả';
+                    } else if (field === 'Borrowing.borrow_date') {
+                        // Format borrow_date if needed, e.g., toLocaleDateString
+                        mappedRecord[field] = value ? new Date(value).toLocaleDateString('vi-VN') : '';
+                    } else {
+                        mappedRecord[field] = value;
+                    }
+                } else {
+                    mappedRecord[field] = record[field];
+                }
             });
-        } else if (collection === 'Borrowing') {
-            fields = fields.map(field => {
-                if (field === 'card_number') return 'reader_name';
-                if (field === 'employee_id') return 'employee_name';
-                return field;
-            });
-        } else if (collection === 'BorrowingDetails') {
-            fields = fields.map(field => {
-                if (field === 'borrow_id') return 'borrowing_id';
-                if (field === 'book_id') return 'book_title';
-                return field;
-            });
-        }
+
+            return mappedRecord;
+        });
 
         const opts = { fields };
         const parser = new Parser(opts);
         const csvWithoutBOM = parser.parse(data);
-        const csv = '\uFEFF' + csvWithoutBOM; // Thêm BOM để hỗ trợ UTF-8 trong Excel
+        const csv = '\uFEFF' + csvWithoutBOM; // Add BOM for UTF-8 support in Excel
 
         res.header('Content-Type', 'text/csv; charset=utf-8');
         res.attachment(`${collection}.csv`);

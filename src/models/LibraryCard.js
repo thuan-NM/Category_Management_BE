@@ -38,6 +38,14 @@ const LibraryCard = sequelize.define(
     address: {
       type: DataTypes.STRING,
     },
+    late_return_count: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    is_locked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     tableName: "library_cards",
