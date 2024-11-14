@@ -88,9 +88,9 @@ const createLibraryCardWithExpiry = async (req, res, next) => {
 
 const unlockLibraryCard = async (req, res, next) => {
     try {
-        const { card_number } = req.params; // Get card number from request parameters
-        const card = await unlockLibraryCard(card_number); // Call the service function
-
+        const { card_number } = req.params;
+        console.log(card_number) // Get card number from request parameters
+        const card = await unlockLibraryCardService(card_number); // Call the service function
         res.status(200).json({
             message: 'Library card unlocked successfully',
             card, // Return the unlocked card details

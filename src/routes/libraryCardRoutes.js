@@ -20,6 +20,6 @@ router.get('/', controller(getAllLibraryCards));
 router.get('/:card_number', controller(getLibraryCardByNumber));
 router.put('/:card_number', controller(updateLibraryCard));
 router.delete('/:card_number', controller(deleteLibraryCard));
-router.patch('/:card_number/unlock', controller(unlockLibraryCard));
+router.put('/:card_number/unlock', controller(unlockLibraryCard));
 
 export default router;
