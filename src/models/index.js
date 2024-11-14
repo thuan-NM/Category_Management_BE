@@ -33,7 +33,6 @@ BorrowingDetails.belongsTo(Book, { foreignKey: 'book_id', onDelete: 'CASCADE' })
 // Exporting Models and Fields Mapping
 const fieldsMapping = {
     Employee: [
-        'employee_id',
         'full_name',
         'birth_date',
         'phone_number',
@@ -42,19 +41,16 @@ const fieldsMapping = {
         'role'
     ],
     Genre: [
-        'genre_id',
         'genre_name',
         'description'
     ],
     Publisher: [
-        'publisher_id',
         'publisher_name',
         'address',
         'email',
         'representative_info'
     ],
     Book: [
-        'book_id',
         'title',
         'publication_year',
         'Author.author_name',
@@ -71,20 +67,17 @@ const fieldsMapping = {
         'notes'
     ],
     Borrowing: [
-        'borrow_id',
         'LibraryCard.reader_name',
         'Employee.full_name',
         'borrow_date'
     ],
     BorrowingDetails: [
-        'borrow_detail_id',
         'Borrowing.borrow_id',
         'Book.title',
         'return_date',
         'notes'
     ],
     Author: [
-        'author_id',
         'author_name',
         'website',
         'notes'
