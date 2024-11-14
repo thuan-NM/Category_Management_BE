@@ -8,32 +8,44 @@ const createPublisher = async(publisherData) => {
 };
 
 // Lấy tất cả Publisher với tìm kiếm và sắp xếp
-const getAllPublishers = async(query) => {
-    const { search, sortBy, order, page, limit } = query;
+const getAllPublishers = async (query) => {
+    const { publisher_name, email, sortBy, order, page = 1, limit = 10 } = query;
+
     const where = {};
-    if (search) {
-        where.publisher_name = sequelize.where(
-            sequelize.fn('LOWER', sequelize.col('publisher_name')),
-            'LIKE',
-            `%${search.toLowerCase()}%`
-        );
+
+    // Add search filters
+    if (publisher_name) {
+        where.publisher_name = {
+            [Op.like]: `%${publisher_name}%`, // Case-insensitive search for publisher name
+        };
     }
 
-    const offset = page && limit ? (page - 1) * limit : 0;
-    const publishers = await Publisher.findAndCountAll({
-        where,
-        order: sortBy ? [
-            [sortBy, order === 'desc' ? 'DESC' : 'ASC']
-        ] : [
-            ['publisher_name', 'ASC']
-        ],
-        include: [Book],
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset || undefined,
-    });
-    return publishers;
-};
+    if (email) {
+        where.email = {
+            [Op.like]: `%${email}%`, // Case-insensitive search for email
+        };
+    }
 
+    const offset = (page - 1) * limit;
+
+    try {
+        const publishers = await Publisher.findAndCountAll({
+            where,
+            order: sortBy ? [
+                [sortBy, order === 'desc' ? 'DESC' : 'ASC']
+            ] : [
+                ['publisher_name', 'ASC']
+            ],
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+        });
+
+        return publishers;
+    } catch (err) {
+        console.error('Error fetching publishers:', err);
+        throw new Error('Failed to fetch publishers');
+    }
+};
 // Lấy Publisher theo ID
 const getPublisherById = async(id) => {
     const publisher = await Publisher.findByPk(id, { include: [Book] });

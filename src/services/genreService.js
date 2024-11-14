@@ -1,6 +1,7 @@
 import { Book, Genre } from '../models/index.js';
 import createHttpError from 'http-errors';
 import sequelize from '../config/db.config.js';
+import { Op } from 'sequelize';
 
 // Thêm mới Genre
 const createGenre = async(genreData) => {
@@ -8,30 +9,46 @@ const createGenre = async(genreData) => {
 };
 
 // Lấy tất cả Genre với tìm kiếm và sắp xếp
-const getAllGenres = async(query) => {
-    const { search, sortBy, order, page, limit } = query;
+const getAllGenres = async (query) => {
+    const { genre_name, description, sortBy, order, page = 1, limit = 10 } = query;
+
     const where = {};
-    if (search) {
-        where.genre_name = sequelize.where(
-            sequelize.fn('LOWER', sequelize.col('genre_name')),
-            'LIKE',
-            `%${search.toLowerCase()}%`
-        );
+
+    // Filter by genre_name if provided
+    if (genre_name) {
+        where.genre_name = {
+            [Op.like]: `%${genre_name}%`
+        };
     }
 
-    const offset = page && limit ? (page - 1) * limit : 0;
-    const genres = await Genre.findAndCountAll({
-        where,
-        order: sortBy ? [
-            [sortBy, order === 'desc' ? 'DESC' : 'ASC']
-        ] : [
-            ['genre_name', 'ASC']
-        ],
-        include: [{ model: Book }],
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset || undefined,
-    });
-    return genres;
+    // Filter by description if provided
+    if (description) {
+        where.description = {
+            [Op.like]: `%${description}%`
+        };
+    }
+
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    try {
+        // Fetch genres with filters, sorting, and pagination
+        const genres = await Genre.findAndCountAll({
+            where,
+            order: sortBy ? [
+                [sortBy, order === 'desc' ? 'DESC' : 'ASC']
+            ] : [
+                ['genre_name', 'ASC']  // Default order by genre_name
+            ],
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+        });
+
+        return genres;
+    } catch (error) {
+        console.error('Error fetching genres:', error);
+        throw new Error('Unable to fetch genres');
+    }
 };
 
 // Lấy Genre theo ID

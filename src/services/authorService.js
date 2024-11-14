@@ -1,6 +1,7 @@
 import { Author, Book } from '../models/index.js';
 import sequelize from '../config/db.config.js';
 import createHttpError from 'http-errors';
+import { Op } from 'sequelize'; // Import Op trực tiếp từ 'sequelize'
 
 // Thêm mới Author
 const createAuthor = async(authorData) => {
@@ -8,24 +9,57 @@ const createAuthor = async(authorData) => {
 };
 
 // Lấy tất cả Author với tìm kiếm và sắp xếp
-const getAllAuthors = async(query = {}) => {
-    const { search, sortBy, order } = query;
+// const getAllAuthors = async(query = {}) => {
+//     const { search, sortBy, order } = query;
+//     const where = {};
+//     if (search) {
+//         where.author_name = sequelize.where(
+//             sequelize.fn('LOWER', sequelize.col('author_name')),
+//             'LIKE',
+//             `%${search.toLowerCase()}%`
+//         );
+//     }
+
+//     const authors = await Author.findAll({
+//         where,
+//         order: sortBy ? [
+//             [sortBy, order === 'desc' ? 'DESC' : 'ASC']
+//         ] : [],
+//         include: [Book],
+//     });
+//     return authors;
+// };
+const getAllAuthors = async (query) => {
+    const { author_name, website, sortBy, order, page = 1, limit = 10 } = query;
+
     const where = {};
-    if (search) {
-        where.author_name = sequelize.where(
-            sequelize.fn('LOWER', sequelize.col('author_name')),
-            'LIKE',
-            `%${search.toLowerCase()}%`
-        );
+
+    if (author_name) {
+        where.author_name = {
+            [Op.like]: `%${author_name}%`
+        };
     }
 
-    const authors = await Author.findAll({
+    if (website) {
+        where.website = {
+            [Op.like]: `%${website}%`
+        };
+    }
+
+    const offset = (page - 1) * limit;
+
+    const authors = await Author.findAndCountAll({
         where,
         order: sortBy ? [
             [sortBy, order === 'desc' ? 'DESC' : 'ASC']
-        ] : [],
-        include: [Book],
+        ] : [
+            ['author_name', 'ASC']
+        ],
+        attributes: { exclude: ['sensitive_info'] }, // Bỏ thông tin nhạy cảm nếu có
+        limit: parseInt(limit),
+        offset: parseInt(offset),
     });
+
     return authors;
 };
 

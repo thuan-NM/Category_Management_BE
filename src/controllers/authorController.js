@@ -20,7 +20,7 @@ const createAuthor = async(req, res) => {
 
 // Lấy tất cả Author
 const getAllAuthors = async(req, res) => {
-    const authors = await getAllAuthorsService();
+    const authors = await getAllAuthorsService(req.query);
     res.fly({
         status: 200,
         data: authors,
