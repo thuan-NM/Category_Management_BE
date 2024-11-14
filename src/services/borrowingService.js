@@ -7,6 +7,7 @@ import {
 } from "../models/index.js";
 import sequelize from "../config/db.config.js";
 import createHttpError from "http-errors";
+import { Op } from 'sequelize';
 
 const createBorrowing = async (borrowingData) => {
   const { card_number, employee_id, borrow_date, books } = borrowingData;
@@ -337,6 +338,56 @@ const updateStatus = async (borrowId, isReturned) => {
   }
 };
 
+// Hàm lấy thống kê mượn sách theo khoảng thời gian
+const getBorrowingStatsByTimeInterval = async (interval) => {
+  let dateFormat;
+  switch (interval) {
+    case 'month':
+      dateFormat = '%Y-%m';
+      break;
+    case 'year':
+      dateFormat = '%Y';
+      break;
+    default:
+      throw createHttpError(400, 'Khoảng thời gian không hợp lệ');
+  }
+
+  const stats = await Borrowing.findAll({
+    attributes: [
+      [sequelize.literal(`DATE_FORMAT(borrow_date, '${dateFormat}')`), 'time'],
+      [sequelize.fn('COUNT', sequelize.col('borrow_id')), 'borrow_count'],
+    ],
+    group: ['time'],
+    order: [['time', 'ASC']],
+    raw: true,
+  });
+
+  return stats;
+};
+
+// Hàm lấy danh sách sách được mượn nhiều nhất
+const getTopBorrowedBooks = async (limit = 10) => {
+  const stats = await BorrowingDetails.findAll({
+    attributes: [
+      'book_id',
+      [sequelize.fn('SUM', sequelize.col('BorrowingDetails.quantity')), 'total_borrowed'],
+    ],
+    group: ['BorrowingDetails.book_id'],
+    order: [[sequelize.literal('total_borrowed'), 'DESC']],
+    include: [
+      {
+        model: Book,
+        attributes: ['title'],
+      },
+    ],
+    limit,
+    raw: true,
+    nest: true,
+  });
+
+  return stats;
+};
+
 export {
   createBorrowing,
   getAllBorrowings,
@@ -348,4 +399,6 @@ export {
   returnAllBooks,
   returnSingleBook,
   updateStatus,
+  getBorrowingStatsByTimeInterval,
+  getTopBorrowedBooks,
 };

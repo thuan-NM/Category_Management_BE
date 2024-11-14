@@ -10,6 +10,8 @@ import {
   returnAllBooks,
   returnSingleBook,
   updateStatus,
+  getBorrowingStatistics,
+  getTopBorrowedBooks,
 } from "../controllers/borrowingController.js";
 
 import { controller } from "../middlewares/index.js";
@@ -20,6 +22,8 @@ router.use(auth); // Apply auth middleware to all routes below this line
 
 router.post("/", controller(createBorrowing));
 router.get("/", controller(getAllBorrowings));
+router.get('/statistics', controller(getBorrowingStatistics));
+router.get('/top-borrowed-books', controller(getTopBorrowedBooks));
 router.get("/monthly-statistics", controller(getMonthlyBorrowings));
 router.get("/check-availability/:book_id", controller(checkBookAvailability));
 router.get("/:id", controller(getBorrowingById));
