@@ -37,7 +37,7 @@ const getAllLibraryCards = async(query) => {
         order: sortBy ? [
             [sortBy, order === 'desc' ? 'DESC' : 'ASC']
         ] : [
-            ['start_date', 'DESC']
+            ['card_number', 'ASC']
         ],
         limit: limit ? parseInt(limit) : undefined,
         offset: offset || undefined,
